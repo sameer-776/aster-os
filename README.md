@@ -130,5 +130,4 @@ npm run preview
 ---
 
 ## 📄 License
-
-Distributed under the MIT License. Built with ❤️ by **Sameer Beniwal**.
+Built with ❤️ by **Sameer Beniwal**.
