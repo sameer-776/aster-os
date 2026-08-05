@@ -968,3 +968,66 @@ a {
   box-shadow: 0 0 0 3px var(--bg), 0 0 0 5px var(--border);
 }
 
+/* ===== Gym Module Personal Fitness OS Styles ===== */
+@keyframes timerPulse {
+  0% { box-shadow: 0 0 0 0px rgba(239, 68, 68, 0.7); transform: scale(1); }
+  50% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); transform: scale(1.02); }
+  100% { box-shadow: 0 0 0 0px rgba(239, 68, 68, 0); transform: scale(1); }
+}
+
+.gym-timer-pulse {
+  animation: timerPulse 0.8s infinite ease-in-out;
+  border-color: var(--red) !important;
+  background: #FEE2E2 !important;
+  color: var(--red) !important;
+}
+
+@keyframes confettiFall {
+  0% { transform: translateY(-50px) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(600px) rotate(720deg); opacity: 0; }
+}
+
+.confetti-piece {
+  position: absolute;
+  width: 10px;
+  height: 14px;
+  top: -20px;
+  z-index: 1000;
+  animation: confettiFall 3s linear forwards;
+}
+
+.card-hover-lift {
+  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.2s ease;
+}
+
+.card-hover-lift:hover {
+  transform: translateY(-4px) translateX(-2px);
+  box-shadow: 7px 7px 0px var(--border) !important;
+}
+
+.btn-press-anim {
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.btn-press-anim:active {
+  transform: translate(3px, 3px) !important;
+  box-shadow: 1px 1px 0px var(--border) !important;
+}
+
+/* Semantic Badges */
+.badge-green { background: #D1FAE5; color: #065F46; border: 1.5px solid var(--border); }
+.badge-orange { background: #FEF3C7; color: #92400E; border: 1.5px solid var(--border); }
+.badge-purple { background: #EDE9FE; color: #5B21B6; border: 1.5px solid var(--border); }
+.badge-yellow { background: #FEF08A; color: #854D0E; border: 1.5px solid var(--border); }
+.badge-blue { background: #DBEAFE; color: #1E40AF; border: 1.5px solid var(--border); }
+.badge-red { background: #FEE2E2; color: #991B1B; border: 1.5px solid var(--border); }
+
+/* Live Workout Highlight */
+.live-workout-hero {
+  background: linear-gradient(135deg, #1E1B4B 0%, #312E81 100%);
+  color: #FFFFFF;
+  border: 3px solid var(--border);
+  box-shadow: 6px 6px 0px var(--border);
+}
+
+

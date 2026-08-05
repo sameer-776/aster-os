@@ -28,3 +28,7 @@ dist-ssr
 *.sln
 *.sw?
 
+# Google Verification (Root temporary files)
+/googled9f1f9bc09407f2f.html
+
+
