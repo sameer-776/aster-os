@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { useAuthStore } from './useAuthStore';
+import { useAuthStore, isRealUser } from './useAuthStore';
 
 const STORAGE_KEY = 'victoros_movies_backup';
 
@@ -30,7 +30,7 @@ export const useMovieStore = create((set, get) => ({
     set({ loading: true });
     try {
       const user = useAuthStore.getState().user;
-      if (!user) {
+      if (!isRealUser(user)) {
         set({ loading: false });
         return;
       }
@@ -58,7 +58,8 @@ export const useMovieStore = create((set, get) => ({
   addMovie: async (movieData) => {
     try {
       const user = useAuthStore.getState().user;
-      const userId = user ? user.uid : 'guest';
+      const real = isRealUser(user);
+      const userId = real ? user.uid : 'guest';
 
       const newMovie = {
         title: movieData.title || 'Untitled Movie',
@@ -77,7 +78,7 @@ export const useMovieStore = create((set, get) => ({
 
       let savedMovie = { id: `local_${Date.now()}`, ...newMovie };
 
-      if (user) {
+      if (real) {
         try {
           const docRef = await addDoc(collection(db, 'movies'), newMovie);
           savedMovie = { id: docRef.id, ...newMovie };
@@ -88,7 +89,7 @@ export const useMovieStore = create((set, get) => ({
 
       const updated = [savedMovie, ...get().movies];
       set({ movies: updated });
-      saveLocalBackup(updated);
+      if (real) saveLocalBackup(updated);
       return savedMovie;
     } catch (error) {
       console.error('Error adding movie:', error);
@@ -97,13 +98,16 @@ export const useMovieStore = create((set, get) => ({
 
   updateMovie: async (id, updatedFields) => {
     try {
+      const user = useAuthStore.getState().user;
+      const real = isRealUser(user);
+
       const updated = get().movies.map(m =>
         m.id === id ? { ...m, ...updatedFields } : m
       );
       set({ movies: updated });
-      saveLocalBackup(updated);
+      if (real) saveLocalBackup(updated);
 
-      if (!id.startsWith('local_')) {
+      if (real && !id.startsWith('local_')) {
         const movieRef = doc(db, 'movies', id);
         await updateDoc(movieRef, updatedFields);
       }
@@ -122,11 +126,14 @@ export const useMovieStore = create((set, get) => ({
 
   deleteMovie: async (id) => {
     try {
+      const user = useAuthStore.getState().user;
+      const real = isRealUser(user);
+
       const updated = get().movies.filter(m => m.id !== id);
       set({ movies: updated });
-      saveLocalBackup(updated);
+      if (real) saveLocalBackup(updated);
 
-      if (!id.startsWith('local_')) {
+      if (real && !id.startsWith('local_')) {
         await deleteDoc(doc(db, 'movies', id));
       }
     } catch (error) {

@@ -1,8 +1,72 @@
 import { useState, useEffect } from 'react';
 import Card from '../components/common/Card';
 import Modal from '../components/common/Modal';
-import { useSettingsStore } from '../store';
+import { useSettingsStore, useCodingStore } from '../store';
 import { LinkedInIcon } from '../components/common/Icons';
+
+const PlatformHandlesForm = () => {
+  const { handles, updateHandles } = useCodingStore();
+  const [gh, setGh] = useState(handles?.github || '');
+  const [lc, setLc] = useState(handles?.leetcode || '');
+  const [cf, setCf] = useState(handles?.codeforces || '');
+  const [savedMsg, setSavedMsg] = useState('');
+
+  useEffect(() => {
+    setGh(handles?.github || '');
+    setLc(handles?.leetcode || '');
+    setCf(handles?.codeforces || '');
+  }, [handles]);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    updateHandles({ github: gh, leetcode: lc, codeforces: cf });
+    setSavedMsg('✓ Platform handles updated! Syncing data...');
+    setTimeout(() => setSavedMsg(''), 3000);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      <div className="grid-3" style={{ gap: '12px' }}>
+        <div>
+          <label style={{ fontSize: '0.75rem', fontWeight: 800, display: 'block', marginBottom: '4px' }}>GITHUB USERNAME</label>
+          <input
+            type="text"
+            className="form-input"
+            placeholder="e.g. octocat"
+            value={gh}
+            onChange={(e) => setGh(e.target.value)}
+          />
+        </div>
+        <div>
+          <label style={{ fontSize: '0.75rem', fontWeight: 800, display: 'block', marginBottom: '4px' }}>LEETCODE USERNAME</label>
+          <input
+            type="text"
+            className="form-input"
+            placeholder="e.g. tourist"
+            value={lc}
+            onChange={(e) => setLc(e.target.value)}
+          />
+        </div>
+        <div>
+          <label style={{ fontSize: '0.75rem', fontWeight: 800, display: 'block', marginBottom: '4px' }}>CODEFORCES HANDLE</label>
+          <input
+            type="text"
+            className="form-input"
+            placeholder="e.g. tourist"
+            value={cf}
+            onChange={(e) => setCf(e.target.value)}
+          />
+        </div>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <button type="submit" className="btn btn-yellow">
+          SAVE PLATFORM HANDLES
+        </button>
+        {savedMsg && <span style={{ fontWeight: 800, color: 'var(--green)', fontSize: '0.85rem' }}>{savedMsg}</span>}
+      </div>
+    </form>
+  );
+};
 
 const Settings = () => {
   const {
@@ -274,6 +338,15 @@ const Settings = () => {
           </div>
         </Card>
       </div>
+
+      {/* PLATFORM CREDENTIALS & HANDLES INTEGRATION CARD */}
+      <Card className="mb-24">
+        <h3 className="card-title">🔗 PLATFORM CREDENTIALS & PUBLIC HANDLES</h3>
+        <p className="text-muted" style={{ fontSize: '0.85rem', fontWeight: 700, marginBottom: '16px' }}>
+          Connect your public developer usernames to auto-sync LeetCode GraphQL streaks & GitHub commit wave charts. Aster OS uses public endpoints only—no passwords required.
+        </p>
+        <PlatformHandlesForm />
+      </Card>
 
       <div className="grid-2 mb-24">
         {/* STORAGE USAGE CARD matching screenshot */}

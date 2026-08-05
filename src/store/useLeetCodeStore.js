@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { collection, addDoc, getDocs, deleteDoc, doc, query, where } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { useAuthStore } from './useAuthStore';
+import { useAuthStore, isRealUser } from './useAuthStore';
 
 export const useLeetCodeStore = create((set) => ({
   problems: [],
@@ -11,7 +11,10 @@ export const useLeetCodeStore = create((set) => ({
     set({ loading: true });
     try {
       const user = useAuthStore.getState().user;
-      if (!user) return;
+      if (!isRealUser(user)) {
+        set({ loading: false });
+        return;
+      }
 
       const q = query(collection(db, 'leetcode'), where('userId', '==', user.uid));
       const querySnapshot = await getDocs(q);
@@ -31,18 +34,23 @@ export const useLeetCodeStore = create((set) => ({
   addProblem: async (problemData) => {
     try {
       const user = useAuthStore.getState().user;
-      if (!user) return;
+      const real = isRealUser(user);
 
       const newProblem = {
         ...problemData,
-        userId: user.uid,
+        userId: real ? user.uid : 'guest',
         createdAt: new Date().toISOString()
       };
 
-      const docRef = await addDoc(collection(db, 'leetcode'), newProblem);
+      let saved = { id: `local_${Date.now()}`, ...newProblem };
+
+      if (real) {
+        const docRef = await addDoc(collection(db, 'leetcode'), newProblem);
+        saved = { id: docRef.id, ...newProblem };
+      }
       
       set((state) => ({ 
-        problems: [{ id: docRef.id, ...newProblem }, ...state.problems]
+        problems: [saved, ...state.problems]
       }));
     } catch (error) {
       console.error("Error adding problem:", error);
@@ -51,7 +59,12 @@ export const useLeetCodeStore = create((set) => ({
 
   deleteProblem: async (id) => {
     try {
-      await deleteDoc(doc(db, 'leetcode', id));
+      const user = useAuthStore.getState().user;
+      const real = isRealUser(user);
+
+      if (real && !id.startsWith('local_')) {
+        await deleteDoc(doc(db, 'leetcode', id));
+      }
       set((state) => ({
         problems: state.problems.filter(p => p.id !== id)
       }));

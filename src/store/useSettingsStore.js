@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { useAuthStore, isRealUser } from './useAuthStore';
 
 const SETTINGS_STORAGE_KEY = 'victoros_settings_backup';
 
@@ -158,6 +159,9 @@ export const useSettingsStore = create((set, get) => ({
 
   saveSettings: () => {
     try {
+      const user = useAuthStore.getState().user;
+      if (!isRealUser(user)) return;
+
       const state = get();
       localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({
         username: state.username,

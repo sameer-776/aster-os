@@ -24,7 +24,8 @@ const Login = () => {
       user: {
         uid: 'guest_user',
         email: 'guest@victoros.app',
-        displayName: 'Guest Commander'
+        displayName: 'Guest Commander',
+        isGuest: true
       },
       loading: false
     });

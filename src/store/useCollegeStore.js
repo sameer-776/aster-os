@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { useAuthStore } from './useAuthStore'; 
+import { useAuthStore, isRealUser } from './useAuthStore'; 
 
 const getLocalYMD = () => {
   const d = new Date();
@@ -20,7 +20,10 @@ export const useCollegeStore = create((set, get) => ({
     set({ loading: true });
     try {
       const user = useAuthStore.getState().user;
-      if (!user) return;
+      if (!isRealUser(user)) {
+        set({ loading: false });
+        return;
+      }
 
       const fetchCollection = async (colName) => {
         const q = query(collection(db, colName), where('userId', '==', user.uid));
@@ -54,19 +57,23 @@ export const useCollegeStore = create((set, get) => ({
   addSubject: async (subjectData) => {
     try {
       const user = useAuthStore.getState().user;
-      if (!user) return;
+      const real = isRealUser(user);
 
       const newSubject = {
         ...subjectData,
         attended: 0,
         total: 0,
-        userId: user.uid,
+        userId: real ? user.uid : 'guest',
         lastLog: null,
         createdAt: new Date().toISOString()
       };
 
-      const docRef = await addDoc(collection(db, 'college_subjects'), newSubject);
-      set((state) => ({ subjects: [...state.subjects, { id: docRef.id, ...newSubject }] }));
+      let saved = { id: `local_${Date.now()}`, ...newSubject };
+      if (real) {
+        const docRef = await addDoc(collection(db, 'college_subjects'), newSubject);
+        saved = { id: docRef.id, ...newSubject };
+      }
+      set((state) => ({ subjects: [...state.subjects, saved] }));
     } catch (error) {
       console.error("Error adding subject:", error);
     }
@@ -76,6 +83,9 @@ export const useCollegeStore = create((set, get) => ({
     try {
       const subject = get().subjects.find(s => s.id === id);
       if (!subject) return;
+
+      const user = useAuthStore.getState().user;
+      const real = isRealUser(user);
 
       let newAttended = Number(subject.attended || 0);
       let newTotal = Number(subject.total || 0);
@@ -95,7 +105,9 @@ export const useCollegeStore = create((set, get) => ({
         lastLog: { date: today, isPresent, count }
       };
 
-      await updateDoc(doc(db, 'college_subjects', id), updatedFields);
+      if (real && !id.startsWith('local_')) {
+        await updateDoc(doc(db, 'college_subjects', id), updatedFields);
+      }
       set((state) => ({ subjects: state.subjects.map(s => s.id === id ? { ...s, ...updatedFields } : s) }));
     } catch (error) {
       console.error("Error logging attendance:", error);
@@ -106,6 +118,9 @@ export const useCollegeStore = create((set, get) => ({
     try {
       const subject = get().subjects.find(s => s.id === id);
       if (!subject || !subject.lastLog) return;
+
+      const user = useAuthStore.getState().user;
+      const real = isRealUser(user);
 
       let newAttended = Number(subject.attended || 0);
       let newTotal = Number(subject.total || 0);
@@ -119,7 +134,9 @@ export const useCollegeStore = create((set, get) => ({
         lastLog: null
       };
 
-      await updateDoc(doc(db, 'college_subjects', id), updatedFields);
+      if (real && !id.startsWith('local_')) {
+        await updateDoc(doc(db, 'college_subjects', id), updatedFields);
+      }
       set((state) => ({ subjects: state.subjects.map(s => s.id === id ? { ...s, ...updatedFields } : s) }));
     } catch (error) {
       console.error("Error undoing attendance:", error);
@@ -128,7 +145,12 @@ export const useCollegeStore = create((set, get) => ({
 
   deleteSubject: async (id) => {
     try {
-      await deleteDoc(doc(db, 'college_subjects', id));
+      const user = useAuthStore.getState().user;
+      const real = isRealUser(user);
+
+      if (real && !id.startsWith('local_')) {
+        await deleteDoc(doc(db, 'college_subjects', id));
+      }
       set((state) => ({ subjects: state.subjects.filter(s => s.id !== id) }));
     } catch (error) {
       console.error("Error deleting subject:", error);
@@ -139,17 +161,21 @@ export const useCollegeStore = create((set, get) => ({
   addAssignment: async (data) => {
     try {
       const user = useAuthStore.getState().user;
-      if (!user) return;
+      const real = isRealUser(user);
       
       const newItem = {
         ...data,
         completed: false,
-        userId: user.uid,
+        userId: real ? user.uid : 'guest',
         createdAt: new Date().toISOString()
       };
       
-      const docRef = await addDoc(collection(db, 'college_assignments'), newItem);
-      set((state) => ({ assignments: [...state.assignments, { id: docRef.id, ...newItem }] }));
+      let saved = { id: `local_${Date.now()}`, ...newItem };
+      if (real) {
+        const docRef = await addDoc(collection(db, 'college_assignments'), newItem);
+        saved = { id: docRef.id, ...newItem };
+      }
+      set((state) => ({ assignments: [...state.assignments, saved] }));
     } catch (error) {
       console.error("Error adding assignment:", error);
     }
@@ -157,7 +183,12 @@ export const useCollegeStore = create((set, get) => ({
 
   toggleAssignment: async (id, currentStatus) => {
     try {
-      await updateDoc(doc(db, 'college_assignments', id), { completed: !currentStatus });
+      const user = useAuthStore.getState().user;
+      const real = isRealUser(user);
+
+      if (real && !id.startsWith('local_')) {
+        await updateDoc(doc(db, 'college_assignments', id), { completed: !currentStatus });
+      }
       set((state) => ({
         assignments: state.assignments.map(a => a.id === id ? { ...a, completed: !currentStatus } : a)
       }));
@@ -168,7 +199,12 @@ export const useCollegeStore = create((set, get) => ({
 
   deleteAssignment: async (id) => {
     try {
-      await deleteDoc(doc(db, 'college_assignments', id));
+      const user = useAuthStore.getState().user;
+      const real = isRealUser(user);
+
+      if (real && !id.startsWith('local_')) {
+        await deleteDoc(doc(db, 'college_assignments', id));
+      }
       set((state) => ({ assignments: state.assignments.filter(a => a.id !== id) }));
     } catch (error) {
       console.error("Error deleting assignment:", error);
@@ -179,16 +215,20 @@ export const useCollegeStore = create((set, get) => ({
   addExam: async (data) => {
     try {
       const user = useAuthStore.getState().user;
-      if (!user) return;
+      const real = isRealUser(user);
       
       const newItem = {
         ...data,
-        userId: user.uid,
+        userId: real ? user.uid : 'guest',
         createdAt: new Date().toISOString()
       };
       
-      const docRef = await addDoc(collection(db, 'college_exams'), newItem);
-      set((state) => ({ exams: [...state.exams, { id: docRef.id, ...newItem }] }));
+      let saved = { id: `local_${Date.now()}`, ...newItem };
+      if (real) {
+        const docRef = await addDoc(collection(db, 'college_exams'), newItem);
+        saved = { id: docRef.id, ...newItem };
+      }
+      set((state) => ({ exams: [...state.exams, saved] }));
     } catch (error) {
       console.error("Error adding exam:", error);
     }
@@ -196,7 +236,12 @@ export const useCollegeStore = create((set, get) => ({
 
   deleteExam: async (id) => {
     try {
-      await deleteDoc(doc(db, 'college_exams', id));
+      const user = useAuthStore.getState().user;
+      const real = isRealUser(user);
+
+      if (real && !id.startsWith('local_')) {
+        await deleteDoc(doc(db, 'college_exams', id));
+      }
       set((state) => ({ exams: state.exams.filter(e => e.id !== id) }));
     } catch (error) {
       console.error("Error deleting exam:", error);
@@ -207,17 +252,21 @@ export const useCollegeStore = create((set, get) => ({
   addProject: async (data) => {
     try {
       const user = useAuthStore.getState().user;
-      if (!user) return;
+      const real = isRealUser(user);
       
       const newItem = {
         ...data,
         completed: false,
-        userId: user.uid,
+        userId: real ? user.uid : 'guest',
         createdAt: new Date().toISOString()
       };
       
-      const docRef = await addDoc(collection(db, 'college_projects'), newItem);
-      set((state) => ({ projects: [...state.projects, { id: docRef.id, ...newItem }] }));
+      let saved = { id: `local_${Date.now()}`, ...newItem };
+      if (real) {
+        const docRef = await addDoc(collection(db, 'college_projects'), newItem);
+        saved = { id: docRef.id, ...newItem };
+      }
+      set((state) => ({ projects: [...state.projects, saved] }));
     } catch (error) {
       console.error("Error adding project:", error);
     }
@@ -225,7 +274,12 @@ export const useCollegeStore = create((set, get) => ({
 
   toggleProject: async (id, currentStatus) => {
     try {
-      await updateDoc(doc(db, 'college_projects', id), { completed: !currentStatus });
+      const user = useAuthStore.getState().user;
+      const real = isRealUser(user);
+
+      if (real && !id.startsWith('local_')) {
+        await updateDoc(doc(db, 'college_projects', id), { completed: !currentStatus });
+      }
       set((state) => ({
         projects: state.projects.map(p => p.id === id ? { ...p, completed: !currentStatus } : p)
       }));
@@ -236,7 +290,12 @@ export const useCollegeStore = create((set, get) => ({
 
   deleteProject: async (id) => {
     try {
-      await deleteDoc(doc(db, 'college_projects', id));
+      const user = useAuthStore.getState().user;
+      const real = isRealUser(user);
+
+      if (real && !id.startsWith('local_')) {
+        await deleteDoc(doc(db, 'college_projects', id));
+      }
       set((state) => ({ projects: state.projects.filter(p => p.id !== id) }));
     } catch (error) {
       console.error("Error deleting project:", error);
@@ -247,16 +306,20 @@ export const useCollegeStore = create((set, get) => ({
   addFaculty: async (data) => {
     try {
       const user = useAuthStore.getState().user;
-      if (!user) return;
+      const real = isRealUser(user);
       
       const newItem = {
         ...data,
-        userId: user.uid,
+        userId: real ? user.uid : 'guest',
         createdAt: new Date().toISOString()
       };
       
-      const docRef = await addDoc(collection(db, 'college_faculty'), newItem);
-      set((state) => ({ faculty: [...state.faculty, { id: docRef.id, ...newItem }] }));
+      let saved = { id: `local_${Date.now()}`, ...newItem };
+      if (real) {
+        const docRef = await addDoc(collection(db, 'college_faculty'), newItem);
+        saved = { id: docRef.id, ...newItem };
+      }
+      set((state) => ({ faculty: [...state.faculty, saved] }));
     } catch (error) {
       console.error("Error adding faculty:", error);
     }
@@ -264,7 +327,12 @@ export const useCollegeStore = create((set, get) => ({
 
   deleteFaculty: async (id) => {
     try {
-      await deleteDoc(doc(db, 'college_faculty', id));
+      const user = useAuthStore.getState().user;
+      const real = isRealUser(user);
+
+      if (real && !id.startsWith('local_')) {
+        await deleteDoc(doc(db, 'college_faculty', id));
+      }
       set((state) => ({ faculty: state.faculty.filter(f => f.id !== id) }));
     } catch (error) {
       console.error("Error deleting faculty:", error);

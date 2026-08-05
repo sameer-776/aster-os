@@ -121,50 +121,105 @@ const Journal = () => {
       </div>
 
       <div className="grid-2" style={{ gridTemplateColumns: '280px 1fr', gap: '20px' }}>
-        {/* Sidebar List */}
-        <Card style={{ height: 'fit-content', maxHeight: 'calc(100vh - 160px)', overflowY: 'auto', padding: '16px' }}>
-          <div className="card-title flex flex-between align-center">
-            <span>ENTRIES ({entries.length})</span>
-            <button
-              onClick={() => setIsPastDateModalOpen(true)}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 900, color: 'var(--accent)' }}
-            >
-              + PAST DATE
-            </button>
-          </div>
-          {loading ? (
-            <p className="text-muted" style={{ fontSize: '0.8rem' }}>Loading...</p>
-          ) : entries.length === 0 ? (
-            <p className="text-muted" style={{ fontSize: '0.8rem', padding: '16px 0' }}>No entries yet</p>
-          ) : (
-            entries.map(entry => (
-              <div
-                key={entry.id}
-                onClick={() => setSelectedId(entry.id)}
-                style={{
-                  padding: '12px',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  marginBottom: '8px',
-                  background: activeEntry && activeEntry.id === entry.id ? 'var(--yellow)' : 'var(--bg)',
-                  border: 'var(--bw) solid var(--border)',
-                  boxShadow: activeEntry && activeEntry.id === entry.id ? '3px 3px 0 var(--border)' : 'none',
-                  transition: 'all 0.15s ease'
-                }}
+        {/* Sidebar List & 30-Day Heatmap */}
+        <div>
+          {/* 30-Day Mood & Sleep Heatmap */}
+          <Card className="mb-16" style={{ padding: '14px' }}>
+            <div className="card-title" style={{ fontSize: '0.75rem', marginBottom: '8px' }}>
+              🗓️ 30-DAY MOOD & SLEEP HEATMAP
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '4px' }}>
+              {Array.from({ length: 30 }).map((_, idx) => {
+                const d = new Date();
+                d.setDate(d.getDate() - (29 - idx));
+                const dateStr = d.toISOString().split('T')[0];
+                const match = entries.find(e => e.date === dateStr);
+                const isSelected = activeEntry && activeEntry.date === dateStr;
+
+                return (
+                  <div
+                    key={dateStr}
+                    onClick={() => match && setSelectedId(match.id)}
+                    title={`${dateStr}: ${match?.mood || 'No log'} (${match?.sleepHours || '0'}h sleep)`}
+                    style={{
+                      aspectRatio: '1',
+                      background: match ? (isSelected ? 'var(--yellow)' : 'var(--bg4)') : 'var(--bg)',
+                      border: isSelected ? '2px solid var(--border)' : '1px solid var(--border)',
+                      display: 'grid',
+                      placeItems: 'center',
+                      fontSize: '0.75rem',
+                      cursor: match ? 'pointer' : 'default',
+                      borderRadius: '2px'
+                    }}
+                  >
+                    {match?.mood || '•'}
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+
+          {/* Sleep Cycle Optimizer Calculator */}
+          <Card className="mb-16" style={{ padding: '14px', background: 'var(--bg2)' }}>
+            <div className="card-title" style={{ fontSize: '0.75rem', marginBottom: '6px' }}>
+              😴 90-MIN SLEEP CYCLE OPTIMIZER
+            </div>
+            <p className="text-muted" style={{ fontSize: '0.72rem', fontWeight: 800, marginBottom: '8px' }}>
+              Optimal wake times (based on 90-min sleep cycles):
+            </p>
+            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+              {['6.0h (4 cycles)', '7.5h (5 cycles)', '9.0h (6 cycles)'].map((opt, i) => (
+                <span key={i} className="badge badge-purple" style={{ fontSize: '0.65rem' }}>
+                  {opt}
+                </span>
+              ))}
+            </div>
+          </Card>
+
+          <Card style={{ height: 'fit-content', maxHeight: '360px', overflowY: 'auto', padding: '16px' }}>
+            <div className="card-title flex flex-between align-center">
+              <span>ENTRIES ({entries.length})</span>
+              <button
+                onClick={() => setIsPastDateModalOpen(true)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 900, color: 'var(--accent)' }}
               >
-                <div className="flex flex-between align-center">
-                  <div style={{ fontSize: '0.85rem', fontWeight: 800 }}>{entry.date}</div>
-                  {entry.date === new Date().toISOString().split('T')[0] && (
-                    <span className="badge badge-green" style={{ fontSize: '0.6rem' }}>TODAY</span>
-                  )}
+                + PAST DATE
+              </button>
+            </div>
+            {loading ? (
+              <p className="text-muted" style={{ fontSize: '0.8rem' }}>Loading...</p>
+            ) : entries.length === 0 ? (
+              <p className="text-muted" style={{ fontSize: '0.8rem', padding: '16px 0' }}>No entries yet</p>
+            ) : (
+              entries.map(entry => (
+                <div
+                  key={entry.id}
+                  onClick={() => setSelectedId(entry.id)}
+                  style={{
+                    padding: '12px',
+                    borderRadius: '4px',
+                    cursor: 'pointer',
+                    marginBottom: '8px',
+                    background: activeEntry && activeEntry.id === entry.id ? 'var(--yellow)' : 'var(--bg)',
+                    border: 'var(--bw) solid var(--border)',
+                    boxShadow: activeEntry && activeEntry.id === entry.id ? '3px 3px 0 var(--border)' : 'none',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  <div className="flex flex-between align-center">
+                    <div style={{ fontSize: '0.85rem', fontWeight: 800 }}>{entry.date}</div>
+                    {entry.date === new Date().toISOString().split('T')[0] && (
+                      <span className="badge badge-green" style={{ fontSize: '0.6rem' }}>TODAY</span>
+                    )}
+                  </div>
+                  <div className="text-muted truncate" style={{ fontSize: '0.75rem', marginTop: '4px', fontWeight: 600 }}>
+                    {entry.mood || '🙂'} 😴 {entry.sleepHours || '8'}h | 💧 {entry.waterGlasses || 0}g | {entry.event || 'No highlight'}
+                  </div>
                 </div>
-                <div className="text-muted truncate" style={{ fontSize: '0.75rem', marginTop: '4px', fontWeight: 600 }}>
-                  {entry.mood || '🙂'} 😴 {entry.sleepHours || '8'}h | 💧 {entry.waterGlasses || 0}g | {entry.event || 'No highlight'}
-                </div>
-              </div>
-            ))
-          )}
-        </Card>
+              ))
+            )}
+          </Card>
+        </div>
 
         {/* Editor Area (ALWAYS OPEN ON VIEW!) */}
         <Card>

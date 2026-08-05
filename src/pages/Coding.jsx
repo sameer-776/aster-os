@@ -6,7 +6,7 @@ import StatCard from '../components/common/StatCard';
 import { TrashIcon, PlusIcon, SearchIcon } from '../components/common/Icons';
 
 const Coding = () => {
-  const { problems, loading, fetchCodingData, addProblem, deleteProblem } = useCodingStore();
+  const { problems, profileStats, handles, loading, fetchCodingData, addProblem, deleteProblem } = useCodingStore();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [platformFilter, setPlatformFilter] = useState('ALL');
@@ -45,19 +45,97 @@ const Coding = () => {
     return matchesPlatform && matchesSearch;
   });
 
+  // Render SVG Wave Chart Path from waveCoordinates
+  const waveCoords = profileStats?.githubCommits?.waveCoordinates || [0.1, 0.4, 0.2, 0.7, 0.5, 0.9, 0.6, 0.8, 0.3, 0.9, 0.7, 1.0, 0.4, 0.8];
+  const svgWidth = 600;
+  const svgHeight = 100;
+  const points = waveCoords.map((val, idx) => {
+    const x = (idx / (waveCoords.length - 1)) * svgWidth;
+    const y = svgHeight - (val * (svgHeight - 20) + 10);
+    return `${x},${y}`;
+  }).join(' ');
+
+  const leetcodeStats = profileStats?.leetcode;
+
   return (
     <div>
       {/* Header */}
-      <div className="page-header">
-        <h1>💻 CODING LOGS</h1>
+      <div className="page-header flex flex-between align-center">
+        <div>
+          <h1 style={{ margin: 0 }}>💻 CODING HUB</h1>
+          <p className="text-muted" style={{ fontWeight: 800, margin: '4px 0 0', textTransform: 'uppercase', fontSize: '0.82rem' }}>
+            LeetCode GraphQL Sync & GitHub Activity Streams
+          </p>
+        </div>
       </div>
 
       {/* Metrics Row */}
       <div className="grid-4 mb-24">
         <StatCard value={totalCount} label="TOTAL LOGS" bg="#FFFFFF" color="var(--text)" />
-        <StatCard value={easyCount} label="EASY SOLVED" bg="#ecfdf5" color="var(--green)" />
-        <StatCard value={mediumCount} label="MEDIUM SOLVED" bg="#fffbeb" color="var(--orange)" />
-        <StatCard value={hardCount} label="HARD SOLVED" bg="#fef2f2" color="var(--red)" />
+        <StatCard value={leetcodeStats?.streak ? `🔥 ${leetcodeStats.streak} DAYS` : easyCount} label={leetcodeStats?.streak ? "LEETCODE STREAK" : "EASY SOLVED"} bg="#ecfdf5" color="var(--green)" />
+        <StatCard value={leetcodeStats?.totalSolved || mediumCount} label={leetcodeStats?.totalSolved ? "LEETCODE TOTAL" : "MEDIUM SOLVED"} bg="#fffbeb" color="var(--orange)" />
+        <StatCard value={profileStats?.githubCommits?.totalRecentCommits || hardCount} label={profileStats?.githubCommits ? "RECENT COMMITS" : "HARD SOLVED"} bg="#fef2f2" color="var(--red)" />
+      </div>
+
+      {/* GitHub Commit Wave Chart & LeetCode Live Sync Card */}
+      <div className="grid-2 mb-24" style={{ gap: '20px' }}>
+        <Card style={{ background: 'var(--bg2)' }}>
+          <div className="flex flex-between align-center mb-12">
+            <h3 className="card-title" style={{ margin: 0 }}>📈 GITHUB COMMIT WAVE CHART</h3>
+            <span className="badge badge-purple">PushEvent Daily Frequency</span>
+          </div>
+          <p className="text-muted" style={{ fontSize: '0.8rem', fontWeight: 800, marginBottom: '16px' }}>
+            {handles?.github ? `@${handles.github}'s 14-Day Activity Wave Coordinates` : 'Connect your GitHub handle in Settings to fetch live commits!'}
+          </p>
+          <div style={{ background: 'var(--bg)', padding: '12px', border: '2px solid var(--border)', borderRadius: '4px' }}>
+            <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} style={{ width: '100%', height: '90px', display: 'block' }}>
+              <defs>
+                <linearGradient id="waveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="var(--accent)" />
+                  <stop offset="100%" stopColor="var(--yellow)" />
+                </linearGradient>
+              </defs>
+              <polyline
+                fill="none"
+                stroke="url(#waveGrad)"
+                strokeWidth="4"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                points={points}
+              />
+            </svg>
+          </div>
+        </Card>
+
+        <Card style={{ background: 'var(--bg2)' }}>
+          <div className="flex flex-between align-center mb-12">
+            <h3 className="card-title" style={{ margin: 0 }}>⚡ LEETCODE LIVE GRAPHQL SYNC</h3>
+            {leetcodeStats?.streak !== undefined && (
+              <span className="badge badge-yellow">🔥 {leetcodeStats.streak} Day Streak</span>
+            )}
+          </div>
+          {leetcodeStats?.recentSubmissions && leetcodeStats.recentSubmissions.length > 0 ? (
+            <div>
+              <p className="text-muted" style={{ fontSize: '0.8rem', fontWeight: 800, marginBottom: '12px' }}>
+                Recent Live Submissions (@{handles?.leetcode}):
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {leetcodeStats.recentSubmissions.slice(0, 3).map((sub, idx) => (
+                  <div key={idx} style={{ padding: '6px 10px', background: 'var(--bg)', border: '1.5px solid var(--border)', fontSize: '0.8rem', fontWeight: 800, display: 'flex', justifyContent: 'space-between' }}>
+                    <span>{sub.title} ({sub.lang})</span>
+                    <span style={{ color: sub.status === 'Accepted' ? 'var(--green)' : 'var(--red)' }}>{sub.status}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div>
+              <p className="text-muted" style={{ fontSize: '0.85rem', fontWeight: 700 }}>
+                {handles?.leetcode ? `Fetched stats for @${handles.leetcode}: ${leetcodeStats?.totalSolved || 0} solved problems.` : 'Enter your LeetCode handle in Settings to fetch GraphQL streak & submissions!'}
+              </p>
+            </div>
+          )}
+        </Card>
       </div>
 
       {/* Log Problem / GitHub Push Form */}

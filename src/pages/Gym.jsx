@@ -17,6 +17,25 @@ const Gym = () => {
   const [duration, setDuration] = useState('');
   const [notes, setNotes] = useState('');
 
+  // 1RM Calculator State
+  const [weight, setWeight] = useState(100);
+  const [reps, setReps] = useState(5);
+  const oneRepMax = Math.round(weight * (1 + reps / 30));
+
+  // Rest Timer State
+  const [restSeconds, setRestSeconds] = useState(0);
+  const [timerActive, setTimerActive] = useState(false);
+
+  useEffect(() => {
+    let interval = null;
+    if (timerActive && restSeconds > 0) {
+      interval = setInterval(() => setRestSeconds(prev => prev - 1), 1000);
+    } else if (restSeconds === 0 && timerActive) {
+      setTimerActive(false);
+    }
+    return () => clearInterval(interval);
+  }, [timerActive, restSeconds]);
+
   const splits = ['Push', 'Pull', 'Legs', 'Upper', 'Lower', 'Full Body', 'Cardio', 'Rest'];
 
   useEffect(() => {
@@ -49,8 +68,51 @@ const Gym = () => {
 
   return (
     <div>
-      <div className="page-header">
-        <h1>🏋️ Gym Tracker</h1>
+      <div className="page-header flex flex-between align-center">
+        <div>
+          <h1 style={{ margin: 0 }}>🏋️ GYM & FITNESS TRACKER</h1>
+          <p className="text-muted" style={{ margin: '4px 0 0', fontWeight: 800, fontSize: '0.82rem' }}>
+            Workouts, 1RM Lift Calculator & Rest Timers
+          </p>
+        </div>
+      </div>
+
+      {/* 1RM CALCULATOR & REST TIMER ROW */}
+      <div className="grid-2 mb-24" style={{ gap: '20px' }}>
+        <Card style={{ background: 'var(--bg2)' }}>
+          <h3 className="card-title" style={{ margin: 0, marginBottom: '12px' }}>📊 1-REP MAX (1RM) CALCULATOR</h3>
+          <div className="flex gap-12 mb-12">
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: '0.75rem', fontWeight: 800 }}>WEIGHT (KG/LBS)</label>
+              <input type="number" className="form-input" value={weight} onChange={e => setWeight(Number(e.target.value))} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={{ fontSize: '0.75rem', fontWeight: 800 }}>REPS</label>
+              <input type="number" className="form-input" value={reps} onChange={e => setReps(Number(e.target.value))} />
+            </div>
+          </div>
+          <div style={{ padding: '10px', background: 'var(--bg)', border: '2px solid var(--border)', fontWeight: 900, fontSize: '1rem', textAlign: 'center', color: 'var(--accent)' }}>
+            Estimated 1RM: {oneRepMax} KG/LBS
+          </div>
+        </Card>
+
+        <Card style={{ background: 'var(--bg2)' }}>
+          <h3 className="card-title" style={{ margin: 0, marginBottom: '12px' }}>⏱️ REST INTERVAL TIMER</h3>
+          <div className="flex gap-8 mb-12">
+            {[60, 90, 120, 180].map(sec => (
+              <button
+                key={sec}
+                className="btn btn-ghost btn-sm"
+                onClick={() => { setRestSeconds(sec); setTimerActive(true); }}
+              >
+                {sec}s Rest
+              </button>
+            ))}
+          </div>
+          <div style={{ padding: '10px', background: 'var(--bg)', border: '2px solid var(--border)', fontWeight: 900, fontSize: '1.2rem', textAlign: 'center', color: restSeconds < 10 ? 'var(--red)' : 'var(--green)' }}>
+            {restSeconds > 0 ? `⏳ ${restSeconds}s Remaining` : '✅ Ready for Next Set!'}
+          </div>
+        </Card>
       </div>
 
       {/* Gym Frequency Chart Card */}

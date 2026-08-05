@@ -116,6 +116,21 @@ const Wardrobe = () => {
     return matchesSeason && matchesSearch;
   });
 
+  // Outfit of the Day Generator State
+  const [randomOutfit, setRandomOutfit] = useState(null);
+
+  const handleGenerateOutfit = () => {
+    const tops = items.filter(i => i.type === 'Tops');
+    const bottoms = items.filter(i => i.type === 'Bottoms');
+    const shoes = items.filter(i => i.type === 'Shoes');
+
+    const top = tops.length ? tops[Math.floor(Math.random() * tops.length)] : null;
+    const bottom = bottoms.length ? bottoms[Math.floor(Math.random() * bottoms.length)] : null;
+    const shoe = shoes.length ? shoes[Math.floor(Math.random() * shoes.length)] : null;
+
+    setRandomOutfit({ top, bottom, shoe });
+  };
+
   const getItemCategoryEmoji = (type) => {
     switch (type) {
       case 'Tops': return '👕';
@@ -131,8 +146,11 @@ const Wardrobe = () => {
     <div>
       {/* Header matching screenshot */}
       <div className="page-header">
-        <h1>👔 WARDROBE</h1>
-        <div className="flex gap-12">
+        <h1>👔 WARDROBE STUDIO</h1>
+        <div className="flex gap-12 flex-wrap">
+          <button className="btn btn-yellow" onClick={handleGenerateOutfit}>
+            🎲 OUTFIT OF THE DAY
+          </button>
           <button className="btn btn-primary" onClick={() => setIsItemModalOpen(true)}>
             <PlusIcon size={16} /> ADD ITEM
           </button>
@@ -141,6 +159,27 @@ const Wardrobe = () => {
           </button>
         </div>
       </div>
+
+      {/* Outfit of the Day Generated Card */}
+      {randomOutfit && (
+        <Card className="mb-24" style={{ background: 'var(--bg2)', borderLeft: '8px solid var(--yellow)' }}>
+          <div className="flex flex-between align-center mb-12">
+            <h3 className="card-title" style={{ margin: 0 }}>🎲 GENERATED OUTFIT OF THE DAY</h3>
+            <button className="btn-icon" onClick={() => setRandomOutfit(null)}>✕</button>
+          </div>
+          <div className="grid-3" style={{ gap: '12px' }}>
+            <div style={{ padding: '10px', background: 'var(--bg)', border: '1.5px solid var(--border)', fontWeight: 800, fontSize: '0.85rem' }}>
+              👕 TOP: {randomOutfit.top ? randomOutfit.top.name : 'Any T-Shirt / Shirt'}
+            </div>
+            <div style={{ padding: '10px', background: 'var(--bg)', border: '1.5px solid var(--border)', fontWeight: 800, fontSize: '0.85rem' }}>
+              👖 BOTTOM: {randomOutfit.bottom ? randomOutfit.bottom.name : 'Any Jeans / Chinos'}
+            </div>
+            <div style={{ padding: '10px', background: 'var(--bg)', border: '1.5px solid var(--border)', fontWeight: 800, fontSize: '0.85rem' }}>
+              👟 SHOES: {randomOutfit.shoe ? randomOutfit.shoe.name : 'Sneakers'}
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* Stats Row */}
       <div className="grid-4 mb-24">

@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { collection, addDoc, getDocs, deleteDoc, doc, query, where } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { useAuthStore } from './useAuthStore'; 
+import { useAuthStore, isRealUser } from './useAuthStore'; 
 
 export const useGymStore = create((set) => ({
   workouts: [],
@@ -11,7 +11,10 @@ export const useGymStore = create((set) => ({
     set({ loading: true });
     try {
       const user = useAuthStore.getState().user;
-      if (!user) return;
+      if (!isRealUser(user)) {
+        set({ loading: false });
+        return;
+      }
 
       const q = query(
         collection(db, 'gym_workouts'), 
@@ -34,16 +37,20 @@ export const useGymStore = create((set) => ({
   addWorkout: async (workoutData) => {
     try {
       const user = useAuthStore.getState().user;
-      if (!user) return;
+      const real = isRealUser(user);
 
       const newWorkout = {
         ...workoutData,
-        userId: user.uid,
+        userId: real ? user.uid : 'guest',
         createdAt: new Date().toISOString()
       };
 
-      const docRef = await addDoc(collection(db, 'gym_workouts'), newWorkout);
-      const savedWorkout = { id: docRef.id, ...newWorkout };
+      let savedWorkout = { id: `local_${Date.now()}`, ...newWorkout };
+
+      if (real) {
+        const docRef = await addDoc(collection(db, 'gym_workouts'), newWorkout);
+        savedWorkout = { id: docRef.id, ...newWorkout };
+      }
       
       set((state) => ({ 
         workouts: [savedWorkout, ...state.workouts].sort((a, b) => b.date.localeCompare(a.date))
@@ -57,7 +64,12 @@ export const useGymStore = create((set) => ({
 
   deleteWorkout: async (id) => {
     try {
-      await deleteDoc(doc(db, 'gym_workouts', id));
+      const user = useAuthStore.getState().user;
+      const real = isRealUser(user);
+
+      if (real && !id.startsWith('local_')) {
+        await deleteDoc(doc(db, 'gym_workouts', id));
+      }
       set((state) => ({
         workouts: state.workouts.filter(w => w.id !== id)
       }));

@@ -6,6 +6,7 @@ import {
   useGoalStore, useCodingStore, useSettingsStore
 } from '../store';
 import { PlusIcon } from '../components/common/Icons';
+import Card from '../components/common/Card';
 
 const QUOTES = [
   { text: "The future belongs to those who believe in the beauty of their dreams.", author: "Eleanor Roosevelt" },
@@ -137,14 +138,54 @@ const Dashboard = () => {
   return (
     <div>
       {/* Header Greeting & Clock */}
-      <div className="mb-24">
-        <h1 style={{ fontSize: '2.2rem', fontWeight: 900, textTransform: 'none', marginBottom: '4px' }}>
-          {greeting}
-        </h1>
-        <p className="text-muted" style={{ fontWeight: 700, fontSize: '0.9rem' }}>
-          {formattedDateTime}
-        </p>
+      <div className="mb-24 flex flex-between align-center" style={{ flexWrap: 'wrap', gap: '12px' }}>
+        <div>
+          <h1 style={{ fontSize: '2.2rem', fontWeight: 900, textTransform: 'none', marginBottom: '4px' }}>
+            {greeting}
+          </h1>
+          <p className="text-muted" style={{ fontWeight: 700, fontSize: '0.9rem' }}>
+            {formattedDateTime}
+          </p>
+        </div>
+        <button 
+          className="btn btn-yellow"
+          onClick={() => window.dispatchEvent(new CustomEvent('open-command-palette'))}
+          style={{ fontSize: '0.85rem' }}
+        >
+          🔍 COMMAND PALETTE (Ctrl+K)
+        </button>
       </div>
+
+      {/* NEW USER ONBOARDING & GET STARTED CHECKLIST */}
+      <Card className="mb-24" style={{ background: 'var(--bg2)', borderLeft: '8px solid var(--accent)' }}>
+        <div className="flex flex-between align-center mb-12">
+          <div>
+            <h3 className="card-title" style={{ margin: 0 }}>⚡ GET STARTED WITH ASTER OS</h3>
+            <p className="text-muted" style={{ margin: '4px 0 0', fontSize: '0.82rem', fontWeight: 800 }}>
+              Complete initial setup checklist to unleash your Personal Life OS!
+            </p>
+          </div>
+          <span className="badge badge-yellow">ONBOARDING & DEMO GUIDE</span>
+        </div>
+        <div className="grid-2" style={{ gap: '12px' }}>
+          <div style={{ padding: '10px 14px', background: 'var(--bg)', border: '2px solid var(--border)', display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 800, fontSize: '0.85rem' }}>
+            <span>✅</span>
+            <span>1. Press <kbd style={{ background: 'var(--bg2)', padding: '2px 6px', border: '1px solid var(--border)' }}>Ctrl + K</kbd> to test Command Palette navigation</span>
+          </div>
+          <div style={{ padding: '10px 14px', background: 'var(--bg)', border: '2px solid var(--border)', display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 800, fontSize: '0.85rem' }}>
+            <span>🎯</span>
+            <span style={{ cursor: 'pointer', textDecoration: 'underline' }} onClick={() => navigate('/goals')}>2. Set up your first Goal Milestone</span>
+          </div>
+          <div style={{ padding: '10px 14px', background: 'var(--bg)', border: '2px solid var(--border)', display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 800, fontSize: '0.85rem' }}>
+            <span>📓</span>
+            <span style={{ cursor: 'pointer', textDecoration: 'underline' }} onClick={() => navigate('/journal')}>3. Log today's Sleep & Mood entry</span>
+          </div>
+          <div style={{ padding: '10px 14px', background: 'var(--bg)', border: '2px solid var(--border)', display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 800, fontSize: '0.85rem' }}>
+            <span>⚙️</span>
+            <span style={{ cursor: 'pointer', textDecoration: 'underline' }} onClick={() => navigate('/settings')}>4. Connect GitHub & LeetCode handles in Settings</span>
+          </div>
+        </div>
+      </Card>
 
       {/* ROW 1: 5 Stat Cards */}
       <div className="dash-grid mb-24" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>

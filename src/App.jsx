@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store';
 
@@ -6,21 +6,21 @@ import { useAuthStore } from './store';
 import Layout from './components/layout/Layout';
 import LoadingScreen from './components/common/LoadingScreen';
 
-// Pages
-import Login from './pages/Login';
-import Dashboard from './pages/Dashboard';
-import Journal from './pages/Journal';
-import Tasks from './pages/Tasks';
-import Calendar from './pages/Calendar';
-import College from './pages/College';
-import Gym from './pages/Gym';
-import Coding from './pages/Coding';
-import Movies from './pages/Movies';
-import Wardrobe from './pages/Wardrobe';
-import Expenses from './pages/Expenses';
-import Goals from './pages/Goals';
-import Analytics from './pages/Analytics';
-import Settings from './pages/Settings';
+// Lazy Loaded Pages
+const Login = lazy(() => import('./pages/Login'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Journal = lazy(() => import('./pages/Journal'));
+const Tasks = lazy(() => import('./pages/Tasks'));
+const Calendar = lazy(() => import('./pages/Calendar'));
+const College = lazy(() => import('./pages/College'));
+const Gym = lazy(() => import('./pages/Gym'));
+const Coding = lazy(() => import('./pages/Coding'));
+const Movies = lazy(() => import('./pages/Movies'));
+const Wardrobe = lazy(() => import('./pages/Wardrobe'));
+const Expenses = lazy(() => import('./pages/Expenses'));
+const Goals = lazy(() => import('./pages/Goals'));
+const Analytics = lazy(() => import('./pages/Analytics'));
+const Settings = lazy(() => import('./pages/Settings'));
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuthStore();
@@ -38,30 +38,32 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<Login />} />
+      <Suspense fallback={<LoadingScreen />}>
+        <Routes>
+          <Route path="/login" element={<Login />} />
 
-        {/* Protected Dashboard Shell Routes */}
-        <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
-          <Route path="/" element={<Dashboard />} />
-          <Route path="/journal" element={<Journal />} />
-          <Route path="/tasks" element={<Tasks />} />
-          <Route path="/calendar" element={<Calendar />} />
-          <Route path="/college" element={<College />} />
-          <Route path="/gym" element={<Gym />} />
-          <Route path="/coding" element={<Coding />} />
-          <Route path="/leetcode" element={<Navigate to="/coding" replace />} />
-          <Route path="/movies" element={<Movies />} />
-          <Route path="/wardrobe" element={<Wardrobe />} />
-          <Route path="/expenses" element={<Expenses />} />
-          <Route path="/goals" element={<Goals />} />
-          <Route path="/analytics" element={<Analytics />} />
-          <Route path="/settings" element={<Settings />} />
-        </Route>
+          {/* Protected Dashboard Shell Routes */}
+          <Route element={<ProtectedRoute><Layout /></ProtectedRoute>}>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/journal" element={<Journal />} />
+            <Route path="/tasks" element={<Tasks />} />
+            <Route path="/calendar" element={<Calendar />} />
+            <Route path="/college" element={<College />} />
+            <Route path="/gym" element={<Gym />} />
+            <Route path="/coding" element={<Coding />} />
+            <Route path="/leetcode" element={<Navigate to="/coding" replace />} />
+            <Route path="/movies" element={<Movies />} />
+            <Route path="/wardrobe" element={<Wardrobe />} />
+            <Route path="/expenses" element={<Expenses />} />
+            <Route path="/goals" element={<Goals />} />
+            <Route path="/analytics" element={<Analytics />} />
+            <Route path="/settings" element={<Settings />} />
+          </Route>
 
-        {/* Fallback route redirecting to home */}
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+          {/* Fallback route redirecting to home */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   );
 }

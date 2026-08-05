@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { useAuthStore } from './useAuthStore'; 
+import { useAuthStore, isRealUser } from './useAuthStore'; 
 
 const STORAGE_KEY = 'victoros_journal_backup';
 
@@ -30,7 +30,7 @@ export const useJournalStore = create((set, get) => ({
     set({ loading: true });
     try {
       const user = useAuthStore.getState().user;
-      if (!user) {
+      if (!isRealUser(user)) {
         set({ loading: false });
         return;
       }
@@ -57,7 +57,8 @@ export const useJournalStore = create((set, get) => ({
   addEntry: async (date) => {
     try {
       const user = useAuthStore.getState().user;
-      const userId = user ? user.uid : 'guest';
+      const real = isRealUser(user);
+      const userId = real ? user.uid : 'guest';
 
       const newEntry = {
         date,
@@ -84,7 +85,7 @@ export const useJournalStore = create((set, get) => ({
 
       let savedEntry = { id: `local_${Date.now()}`, ...newEntry };
 
-      if (user) {
+      if (real) {
         try {
           const docRef = await addDoc(collection(db, 'journal'), newEntry);
           savedEntry = { id: docRef.id, ...newEntry };
@@ -95,7 +96,7 @@ export const useJournalStore = create((set, get) => ({
       
       const updated = [savedEntry, ...get().entries].sort((a, b) => b.date.localeCompare(a.date));
       set({ entries: updated });
-      saveLocalBackup(updated);
+      if (real) saveLocalBackup(updated);
       return savedEntry;
     } catch (error) {
       console.error("Error adding entry:", error);
@@ -104,13 +105,16 @@ export const useJournalStore = create((set, get) => ({
 
   updateEntry: async (id, updatedFields) => {
     try {
+      const user = useAuthStore.getState().user;
+      const real = isRealUser(user);
+
       const updated = get().entries.map(entry => 
         entry.id === id ? { ...entry, ...updatedFields } : entry
       );
       set({ entries: updated });
-      saveLocalBackup(updated);
+      if (real) saveLocalBackup(updated);
       
-      if (!id.startsWith('local_')) {
+      if (real && !id.startsWith('local_')) {
         const entryRef = doc(db, 'journal', id);
         await updateDoc(entryRef, updatedFields);
       }
@@ -121,11 +125,14 @@ export const useJournalStore = create((set, get) => ({
 
   deleteEntry: async (id) => {
     try {
+      const user = useAuthStore.getState().user;
+      const real = isRealUser(user);
+
       const updated = get().entries.filter(entry => entry.id !== id);
       set({ entries: updated });
-      saveLocalBackup(updated);
+      if (real) saveLocalBackup(updated);
 
-      if (!id.startsWith('local_')) {
+      if (real && !id.startsWith('local_')) {
         await deleteDoc(doc(db, 'journal', id));
       }
     } catch (error) {

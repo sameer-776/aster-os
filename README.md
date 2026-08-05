@@ -1,22 +1,45 @@
-# ⚡ ASTER OS — Personal Life Operating System
-
 <div align="center">
 
-[![Live Demo](https://img.shields.io/badge/🌐_Live_App-aster--os.netlify.app-0A66C2?style=for-the-badge&logo=netlify)](https://aster-os.netlify.app/)
-[![LinkedIn](https://img.shields.io/badge/Connect_on-LinkedIn-0A66C2?style=for-the-badge&logo=linkedin)](https://www.linkedin.com/in/sameer-beniwal)
-![React](https://img.shields.io/badge/React-19.2-2563EB?style=for-the-badge&logo=react)
-![Vite](https://img.shields.io/badge/Vite-8.1-FACC15?style=for-the-badge&logo=vite)
-![Firebase](https://img.shields.io/badge/Firebase-12.16-FFCA28?style=for-the-badge&logo=firebase)
-![Zustand](https://img.shields.io/badge/Zustand-5.0-8B5CF6?style=for-the-badge)
-![UI Design](https://img.shields.io/badge/Design-Neo--Brutalist-0F0F0F?style=for-the-badge)
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="logo-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="logo-light.png">
+    <img alt="Aster OS Logo" src="logo-light.png" width="480">
+  </picture>
 
-### 🚀 **[Try the Live Web App Here](https://aster-os.netlify.app/)**
+  <br />
+  <br />
 
-**A high-performance, privacy-first, Neo-Brutalist personal command center for tracking tasks, daily journal & sleep cycles, workout logs, IMDb movie library, wardrobe outfits, milestone goals, expenses, and coding challenges.**
+  # ⚡ ASTER OS — Personal Life Operating System
+
+  [![Live Demo](https://img.shields.io/badge/🌐_Live_App-aster--os.netlify.app-0A66C2?style=for-the-badge&logo=netlify)](https://aster-os.netlify.app/)
+  [![License: Proprietary](https://img.shields.io/badge/License-All_Rights_Reserved-red.svg?style=for-the-badge)](./LICENSE)
+  [![LinkedIn](https://img.shields.io/badge/Connect_on-LinkedIn-0A66C2?style=for-the-badge&logo=linkedin)](https://www.linkedin.com/in/sameer-beniwal)
+  ![React](https://img.shields.io/badge/React-19.2-2563EB?style=for-the-badge&logo=react)
+  ![Vite](https://img.shields.io/badge/Vite-8.1-FACC15?style=for-the-badge&logo=vite)
+  ![Firebase](https://img.shields.io/badge/Firebase-12.16-FFCA28?style=for-the-badge&logo=firebase)
+  ![Zustand](https://img.shields.io/badge/Zustand-5.0-8B5CF6?style=for-the-badge)
+  ![UI Design](https://img.shields.io/badge/Design-Neo--Brutalist-0F0F0F?style=for-the-badge)
+
+  <br />
+
+  ### 🚀 **[Try the Live Web App Here](https://aster-os.netlify.app/)**
+
+  **A high-performance, privacy-first, Neo-Brutalist personal command center for tracking tasks, daily journal & sleep cycles, workout logs, IMDb movie library, wardrobe outfits, milestone goals, expenses, and coding challenges.**
+
+</div>
 
 ---
 
-</div>
+## 🎨 Branding & Theme Logos
+
+Aster OS includes custom high-resolution logos tailored for both dark and light UI themes:
+
+| Theme | Preview | File Location |
+| :--- | :---: | :--- |
+| **Dark Mode Logo** | <img src="logo-dark.png" width="240" alt="Aster OS Dark Logo" /> | `logo-dark.png` |
+| **Light Mode Logo** | <img src="logo-light.png" width="240" alt="Aster OS Light Logo" /> | `logo-light.png` |
+
+---
 
 ## 👨‍💻 Created & Maintained By
 
@@ -92,10 +115,10 @@
 ### 2. Installation
 ```bash
 # Clone the repository
-git clone https://github.com/sameer-776/victoros.git
+git clone https://github.com/sameer-776/aster-os.git
 
 # Navigate into project directory
-cd victoros
+cd aster-os
 
 # Install dependencies
 npm install
@@ -129,5 +152,10 @@ npm run preview
 
 ---
 
-## 📄 License
+## 📄 License & Copyright
+
+Copyright © 2026 **Sameer Beniwal**. All Rights Reserved.
+
+This application and its source code are **Proprietary & Confidential**. Unauthorized copying, modification, redistribution, or commercial use without prior written consent from Sameer Beniwal is strictly prohibited. See the [LICENSE](./LICENSE) file for complete details.
+
 Built with ❤️ by **Sameer Beniwal**.

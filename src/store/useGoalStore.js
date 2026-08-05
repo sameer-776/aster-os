@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { useAuthStore } from './useAuthStore';
+import { useAuthStore, isRealUser } from './useAuthStore';
 
 const STORAGE_KEY = 'victoros_goals_backup';
 const CATEGORIES_STORAGE_KEY = 'victoros_goal_categories_backup';
@@ -34,7 +34,7 @@ export const useGoalStore = create((set, get) => ({
     set({ loading: true });
     try {
       const user = useAuthStore.getState().user;
-      if (!user) {
+      if (!isRealUser(user)) {
         set({ loading: false });
         return;
       }
@@ -65,13 +65,15 @@ export const useGoalStore = create((set, get) => ({
 
     const updatedCategories = [...get().categories, cleanCat];
     set({ categories: updatedCategories });
-    saveLocalBackup(CATEGORIES_STORAGE_KEY, updatedCategories);
+    const user = useAuthStore.getState().user;
+    if (isRealUser(user)) saveLocalBackup(CATEGORIES_STORAGE_KEY, updatedCategories);
   },
 
   addGoal: async (goalData) => {
     try {
       const user = useAuthStore.getState().user;
-      const userId = user ? user.uid : 'guest';
+      const real = isRealUser(user);
+      const userId = real ? user.uid : 'guest';
 
       const milestones = (goalData.milestones || []).map((m, idx) =>
         typeof m === 'string' ? { id: `m_${idx}_${Date.now()}`, title: m, completed: false } : m
@@ -96,7 +98,7 @@ export const useGoalStore = create((set, get) => ({
 
       let savedGoal = { id: `local_${Date.now()}`, ...newGoal };
 
-      if (user) {
+      if (real) {
         try {
           const docRef = await addDoc(collection(db, 'goals'), newGoal);
           savedGoal = { id: docRef.id, ...newGoal };
@@ -107,7 +109,7 @@ export const useGoalStore = create((set, get) => ({
 
       const updated = [savedGoal, ...get().goals];
       set({ goals: updated });
-      saveLocalBackup(STORAGE_KEY, updated);
+      if (real) saveLocalBackup(STORAGE_KEY, updated);
       return savedGoal;
     } catch (error) {
       console.error('Error adding goal:', error);
@@ -116,13 +118,16 @@ export const useGoalStore = create((set, get) => ({
 
   updateGoal: async (id, updatedFields) => {
     try {
+      const user = useAuthStore.getState().user;
+      const real = isRealUser(user);
+
       const updated = get().goals.map(g =>
         g.id === id ? { ...g, ...updatedFields } : g
       );
       set({ goals: updated });
-      saveLocalBackup(STORAGE_KEY, updated);
+      if (real) saveLocalBackup(STORAGE_KEY, updated);
 
-      if (!id.startsWith('local_')) {
+      if (real && !id.startsWith('local_')) {
         const goalRef = doc(db, 'goals', id);
         await updateDoc(goalRef, updatedFields);
       }
@@ -162,11 +167,14 @@ export const useGoalStore = create((set, get) => ({
 
   deleteGoal: async (id) => {
     try {
+      const user = useAuthStore.getState().user;
+      const real = isRealUser(user);
+
       const updated = get().goals.filter(g => g.id !== id);
       set({ goals: updated });
-      saveLocalBackup(STORAGE_KEY, updated);
+      if (real) saveLocalBackup(STORAGE_KEY, updated);
 
-      if (!id.startsWith('local_')) {
+      if (real && !id.startsWith('local_')) {
         await deleteDoc(doc(db, 'goals', id));
       }
     } catch (error) {

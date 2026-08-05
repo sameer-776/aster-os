@@ -1,4 +1,4 @@
-export { useAuthStore } from './useAuthStore';
+export { useAuthStore, isRealUser } from './useAuthStore';
 export { useCollegeStore } from './useCollegeStore';
 export { useGymStore } from './useGymStore';
 export { useExpenseStore } from './useExpenseStore';

@@ -298,10 +298,33 @@ const Analytics = () => {
     <div style={{ position: 'relative', paddingBottom: '60px' }}>
       {/* Header */}
       <div className="page-header">
-        <h1 className="flex flex-center gap-12">
-          <span>📊</span> SYSTEM ANALYTICS
-        </h1>
+        <h1>📊 ANALYTICS & LIFE INSIGHTS</h1>
       </div>
+
+      {/* LIFE BALANCE RADAR & SUMMARY CARD */}
+      <Card className="mb-24" style={{ background: 'var(--bg2)', borderLeft: '8px solid var(--accent)' }}>
+        <h3 className="card-title" style={{ margin: 0, marginBottom: '12px' }}>🎯 LIFE BALANCE INDEX SUMMARY</h3>
+        <div className="grid-4" style={{ gap: '12px' }}>
+          <div style={{ padding: '10px', background: 'var(--bg)', border: '1.5px solid var(--border)' }}>
+            <div style={{ fontSize: '0.72rem', fontWeight: 800 }}>💪 FITNESS & GYM</div>
+            <div style={{ fontSize: '1.2rem', fontWeight: 900, color: 'var(--green)' }}>{Math.min(100, workouts.length * 15)}%</div>
+          </div>
+          <div style={{ padding: '10px', background: 'var(--bg)', border: '1.5px solid var(--border)' }}>
+            <div style={{ fontSize: '0.72rem', fontWeight: 800 }}>💻 CODING & DSA</div>
+            <div style={{ fontSize: '1.2rem', fontWeight: 900, color: 'var(--accent)' }}>{Math.min(100, problems.length * 12)}%</div>
+          </div>
+          <div style={{ padding: '10px', background: 'var(--bg)', border: '1.5px solid var(--border)' }}>
+            <div style={{ fontSize: '0.72rem', fontWeight: 800 }}>📓 JOURNAL & SLEEP</div>
+            <div style={{ fontSize: '1.2rem', fontWeight: 900, color: 'var(--yellow)' }}>{Math.min(100, entries.length * 10)}%</div>
+          </div>
+          <div style={{ padding: '10px', background: 'var(--bg)', border: '1.5px solid var(--border)' }}>
+            <div style={{ fontSize: '0.72rem', fontWeight: 800 }}>🎯 GOALS COMPLETED</div>
+            <div style={{ fontSize: '1.2rem', fontWeight: 900, color: 'var(--red)' }}>{Math.min(100, completedGoalsCount * 25)}%</div>
+          </div>
+        </div>
+      </Card>
+
+
 
       {/* Top Stat Cards */}
       <div className="grid-4 mb-24">

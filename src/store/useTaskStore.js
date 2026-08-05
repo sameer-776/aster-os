@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { collection, addDoc, getDocs, deleteDoc, doc, query, where } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { useAuthStore } from './useAuthStore'; 
+import { useAuthStore, isRealUser } from './useAuthStore'; 
 
 export const useTaskStore = create((set) => ({
   tasks: [],
@@ -11,7 +11,10 @@ export const useTaskStore = create((set) => ({
     set({ loading: true });
     try {
       const user = useAuthStore.getState().user;
-      if (!user) return;
+      if (!isRealUser(user)) {
+        set({ loading: false });
+        return;
+      }
 
       const q = query(collection(db, 'tasks'), where('userId', '==', user.uid));
       const querySnapshot = await getDocs(q);
@@ -31,22 +34,26 @@ export const useTaskStore = create((set) => ({
   addTask: async (title) => {
     try {
       const user = useAuthStore.getState().user;
-      if (!user) return;
+      const real = isRealUser(user);
 
       const newTask = {
         title,
         status: 'todo',
         priority: 'medium',
-        userId: user.uid,
+        userId: real ? user.uid : 'guest',
         createdAt: new Date().toISOString()
       };
 
-      // Push to Firebase
-      const docRef = await addDoc(collection(db, 'tasks'), newTask);
+      let savedTask = { id: `local_${Date.now()}`, ...newTask };
+
+      if (real) {
+        const docRef = await addDoc(collection(db, 'tasks'), newTask);
+        savedTask = { id: docRef.id, ...newTask };
+      }
       
       // Update the UI instantly
       set((state) => ({ 
-        tasks: [...state.tasks, { id: docRef.id, ...newTask }] 
+        tasks: [...state.tasks, savedTask] 
       }));
     } catch (error) {
       console.error("Error adding task:", error);
@@ -55,7 +62,12 @@ export const useTaskStore = create((set) => ({
 
   deleteTask: async (id) => {
     try {
-      await deleteDoc(doc(db, 'tasks', id));
+      const user = useAuthStore.getState().user;
+      const real = isRealUser(user);
+
+      if (real && !id.startsWith('local_')) {
+        await deleteDoc(doc(db, 'tasks', id));
+      }
       set((state) => ({
         tasks: state.tasks.filter(task => task.id !== id)
       }));

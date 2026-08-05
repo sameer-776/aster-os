@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { collection, addDoc, getDocs, deleteDoc, doc, query, where } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { useAuthStore } from './useAuthStore';
+import { useAuthStore, isRealUser } from './useAuthStore';
 
 export const useCalendarStore = create((set) => ({
   events: [],
@@ -11,7 +11,10 @@ export const useCalendarStore = create((set) => ({
     set({ loading: true });
     try {
       const user = useAuthStore.getState().user;
-      if (!user) return;
+      if (!isRealUser(user)) {
+        set({ loading: false });
+        return;
+      }
 
       const q = query(collection(db, 'calendar_events'), where('userId', '==', user.uid));
       const querySnapshot = await getDocs(q);
@@ -31,16 +34,20 @@ export const useCalendarStore = create((set) => ({
   addEvent: async (eventData) => {
     try {
       const user = useAuthStore.getState().user;
-      if (!user) return;
+      const real = isRealUser(user);
 
       const newEvent = {
         ...eventData,
-        userId: user.uid,
+        userId: real ? user.uid : 'guest',
         createdAt: new Date().toISOString()
       };
 
-      const docRef = await addDoc(collection(db, 'calendar_events'), newEvent);
-      const savedEvent = { id: docRef.id, ...newEvent };
+      let savedEvent = { id: `local_${Date.now()}`, ...newEvent };
+
+      if (real) {
+        const docRef = await addDoc(collection(db, 'calendar_events'), newEvent);
+        savedEvent = { id: docRef.id, ...newEvent };
+      }
       
       set((state) => ({ 
         events: [...state.events, savedEvent]
@@ -54,7 +61,12 @@ export const useCalendarStore = create((set) => ({
 
   deleteEvent: async (id) => {
     try {
-      await deleteDoc(doc(db, 'calendar_events', id));
+      const user = useAuthStore.getState().user;
+      const real = isRealUser(user);
+
+      if (real && !id.startsWith('local_')) {
+        await deleteDoc(doc(db, 'calendar_events', id));
+      }
       set((state) => ({
         events: state.events.filter(e => e.id !== id)
       }));

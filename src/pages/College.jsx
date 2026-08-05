@@ -170,6 +170,28 @@ const College = () => {
             </div>
           </Card>
 
+          {/* TERM GPA & CREDIT WEIGHTAGE CALCULATOR */}
+          <Card className="mb-24" style={{ background: 'var(--bg2)' }}>
+            <h3 className="card-title">🎓 TERM GPA & CREDIT WEIGHTAGE CALCULATOR</h3>
+            <div className="grid-3" style={{ gap: '12px' }}>
+              {subjects.slice(0, 6).map((sub, i) => {
+                const credits = getCreditCount(sub.name);
+                const score = Math.round((sub.attended / Math.max(1, sub.total)) * 10);
+                return (
+                  <div key={i} style={{ padding: '10px', background: 'var(--bg)', border: '1.5px solid var(--border)', fontSize: '0.82rem', fontWeight: 800 }}>
+                    <div style={{ textTransform: 'uppercase', marginBottom: '4px' }}>{sub.name} ({credits} Credits)</div>
+                    <div style={{ color: 'var(--accent)' }}>Grade Point: {score}/10</div>
+                  </div>
+                );
+              })}
+            </div>
+            {subjects.length > 0 && (
+              <div style={{ marginTop: '12px', fontWeight: 900, fontSize: '0.9rem', color: 'var(--green)' }}>
+                Estimated Cumulative GPA: {(subjects.reduce((sum, s) => sum + (s.attended / Math.max(1, s.total)) * 10 * getCreditCount(s.name), 0) / subjects.reduce((sum, s) => sum + getCreditCount(s.name), 1)).toFixed(2)} / 10.0
+              </div>
+            )}
+          </Card>
+
           {hasScheduledSubjects && (
             <Card className="mb-24">
               <div className="flex flex-between mb-16 flex-wrap gap-12">

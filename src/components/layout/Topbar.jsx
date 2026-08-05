@@ -14,9 +14,18 @@ const Topbar = ({ onMenuToggle }) => {
         <MenuIcon size={20} />
       </button>
 
-      <div className="topbar-search">
+      <div 
+        className="topbar-search" 
+        onClick={() => window.dispatchEvent(new CustomEvent('open-command-palette'))}
+        style={{ cursor: 'pointer' }}
+      >
         <SearchIcon size={16} />
-        <input type="text" placeholder="Search everything..." />
+        <input 
+          type="text" 
+          placeholder="Search commands & pages... (Ctrl+K)" 
+          readOnly
+          style={{ cursor: 'pointer' }}
+        />
         <kbd>Ctrl+K</kbd>
       </div>
 

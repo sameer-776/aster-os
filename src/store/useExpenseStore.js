@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { collection, addDoc, getDocs, deleteDoc, doc, query, where } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { useAuthStore } from './useAuthStore';
+import { useAuthStore, isRealUser } from './useAuthStore';
 
 export const useExpenseStore = create((set) => ({
   expenses: [],
@@ -11,7 +11,10 @@ export const useExpenseStore = create((set) => ({
     set({ loading: true });
     try {
       const user = useAuthStore.getState().user;
-      if (!user) return;
+      if (!isRealUser(user)) {
+        set({ loading: false });
+        return;
+      }
 
       const q = query(collection(db, 'expenses'), where('userId', '==', user.uid));
       const querySnapshot = await getDocs(q);
@@ -31,18 +34,23 @@ export const useExpenseStore = create((set) => ({
   addExpense: async (expenseData) => {
     try {
       const user = useAuthStore.getState().user;
-      if (!user) return;
+      const real = isRealUser(user);
 
       const newExpense = {
         ...expenseData,
-        userId: user.uid,
+        userId: real ? user.uid : 'guest',
         createdAt: new Date().toISOString()
       };
 
-      const docRef = await addDoc(collection(db, 'expenses'), newExpense);
+      let saved = { id: `local_${Date.now()}`, ...newExpense };
+
+      if (real) {
+        const docRef = await addDoc(collection(db, 'expenses'), newExpense);
+        saved = { id: docRef.id, ...newExpense };
+      }
       
       set((state) => ({ 
-        expenses: [{ id: docRef.id, ...newExpense }, ...state.expenses]
+        expenses: [saved, ...state.expenses]
       }));
     } catch (error) {
       console.error("Error adding expense:", error);
@@ -51,7 +59,12 @@ export const useExpenseStore = create((set) => ({
 
   deleteExpense: async (id) => {
     try {
-      await deleteDoc(doc(db, 'expenses', id));
+      const user = useAuthStore.getState().user;
+      const real = isRealUser(user);
+
+      if (real && !id.startsWith('local_')) {
+        await deleteDoc(doc(db, 'expenses', id));
+      }
       set((state) => ({
         expenses: state.expenses.filter(e => e.id !== id)
       }));

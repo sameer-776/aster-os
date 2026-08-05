@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where } from 'firebase/firestore';
 import { db } from '../lib/firebase';
-import { useAuthStore } from './useAuthStore';
+import { useAuthStore, isRealUser } from './useAuthStore';
 
 const ITEMS_STORAGE_KEY = 'victoros_wardrobe_items_backup';
 const OUTFITS_STORAGE_KEY = 'victoros_wardrobe_outfits_backup';
@@ -32,7 +32,7 @@ export const useWardrobeStore = create((set, get) => ({
     set({ loading: true });
     try {
       const user = useAuthStore.getState().user;
-      if (!user) {
+      if (!isRealUser(user)) {
         set({ loading: false });
         return;
       }
@@ -71,7 +71,8 @@ export const useWardrobeStore = create((set, get) => ({
   addItem: async (itemData) => {
     try {
       const user = useAuthStore.getState().user;
-      const userId = user ? user.uid : 'guest';
+      const real = isRealUser(user);
+      const userId = real ? user.uid : 'guest';
 
       const newItem = {
         name: itemData.name || 'Unnamed Item',
@@ -88,7 +89,7 @@ export const useWardrobeStore = create((set, get) => ({
 
       let savedItem = { id: `local_${Date.now()}`, ...newItem };
 
-      if (user) {
+      if (real) {
         try {
           const docRef = await addDoc(collection(db, 'wardrobe_items'), newItem);
           savedItem = { id: docRef.id, ...newItem };
@@ -99,7 +100,7 @@ export const useWardrobeStore = create((set, get) => ({
 
       const updated = [savedItem, ...get().items];
       set({ items: updated });
-      saveLocalBackup(ITEMS_STORAGE_KEY, updated);
+      if (real) saveLocalBackup(ITEMS_STORAGE_KEY, updated);
       return savedItem;
     } catch (error) {
       console.error('Error adding wardrobe item:', error);
@@ -108,13 +109,16 @@ export const useWardrobeStore = create((set, get) => ({
 
   updateItem: async (id, updatedFields) => {
     try {
+      const user = useAuthStore.getState().user;
+      const real = isRealUser(user);
+
       const updated = get().items.map(item =>
         item.id === id ? { ...item, ...updatedFields } : item
       );
       set({ items: updated });
-      saveLocalBackup(ITEMS_STORAGE_KEY, updated);
+      if (real) saveLocalBackup(ITEMS_STORAGE_KEY, updated);
 
-      if (!id.startsWith('local_')) {
+      if (real && !id.startsWith('local_')) {
         const itemRef = doc(db, 'wardrobe_items', id);
         await updateDoc(itemRef, updatedFields);
       }
@@ -140,11 +144,14 @@ export const useWardrobeStore = create((set, get) => ({
 
   deleteItem: async (id) => {
     try {
+      const user = useAuthStore.getState().user;
+      const real = isRealUser(user);
+
       const updated = get().items.filter(item => item.id !== id);
       set({ items: updated });
-      saveLocalBackup(ITEMS_STORAGE_KEY, updated);
+      if (real) saveLocalBackup(ITEMS_STORAGE_KEY, updated);
 
-      if (!id.startsWith('local_')) {
+      if (real && !id.startsWith('local_')) {
         await deleteDoc(doc(db, 'wardrobe_items', id));
       }
     } catch (error) {
@@ -155,7 +162,8 @@ export const useWardrobeStore = create((set, get) => ({
   addOutfit: async (outfitData) => {
     try {
       const user = useAuthStore.getState().user;
-      const userId = user ? user.uid : 'guest';
+      const real = isRealUser(user);
+      const userId = real ? user.uid : 'guest';
 
       const newOutfit = {
         name: outfitData.name || 'Unnamed Outfit',
@@ -174,7 +182,7 @@ export const useWardrobeStore = create((set, get) => ({
 
       let savedOutfit = { id: `local_outfit_${Date.now()}`, ...newOutfit };
 
-      if (user) {
+      if (real) {
         try {
           const docRef = await addDoc(collection(db, 'wardrobe_outfits'), newOutfit);
           savedOutfit = { id: docRef.id, ...newOutfit };
@@ -185,7 +193,7 @@ export const useWardrobeStore = create((set, get) => ({
 
       const updated = [savedOutfit, ...get().outfits];
       set({ outfits: updated });
-      saveLocalBackup(OUTFITS_STORAGE_KEY, updated);
+      if (real) saveLocalBackup(OUTFITS_STORAGE_KEY, updated);
       return savedOutfit;
     } catch (error) {
       console.error('Error adding outfit:', error);
@@ -196,14 +204,17 @@ export const useWardrobeStore = create((set, get) => ({
     const outfit = get().outfits.find(o => o.id === outfitId);
     if (!outfit) return;
 
+    const user = useAuthStore.getState().user;
+    const real = isRealUser(user);
+
     // Increment outfit wear count
     const updatedOutfits = get().outfits.map(o =>
       o.id === outfitId ? { ...o, wearCount: (o.wearCount || 0) + 1 } : o
     );
     set({ outfits: updatedOutfits });
-    saveLocalBackup(OUTFITS_STORAGE_KEY, updatedOutfits);
+    if (real) saveLocalBackup(OUTFITS_STORAGE_KEY, updatedOutfits);
 
-    if (!outfitId.startsWith('local_')) {
+    if (real && !outfitId.startsWith('local_')) {
       try {
         const outfitRef = doc(db, 'wardrobe_outfits', outfitId);
         await updateDoc(outfitRef, { wearCount: (outfit.wearCount || 0) + 1 });
@@ -221,11 +232,14 @@ export const useWardrobeStore = create((set, get) => ({
 
   deleteOutfit: async (id) => {
     try {
+      const user = useAuthStore.getState().user;
+      const real = isRealUser(user);
+
       const updated = get().outfits.filter(o => o.id !== id);
       set({ outfits: updated });
-      saveLocalBackup(OUTFITS_STORAGE_KEY, updated);
+      if (real) saveLocalBackup(OUTFITS_STORAGE_KEY, updated);
 
-      if (!id.startsWith('local_')) {
+      if (real && !id.startsWith('local_')) {
         await deleteDoc(doc(db, 'wardrobe_outfits', id));
       }
     } catch (error) {

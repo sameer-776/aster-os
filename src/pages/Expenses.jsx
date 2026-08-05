@@ -22,16 +22,39 @@ const Expenses = () => {
     }
   };
   
+  const [budgetCap, setBudgetCap] = useState(10000);
   const totalSpent = expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
+  const percentSpent = Math.min(100, Math.round((totalSpent / Math.max(1, budgetCap)) * 100));
 
   return (
     <div>
       <div className="page-header">
-        <h1>💰 Expenses</h1>
+        <h1>💰 EXPENSES & BUDGET TRACKER</h1>
       </div>
       
-      <div className="mb-24">
-        <StatCard value={`₹${totalSpent}`} label="Total Amount Spent" bg="#ecfdf5" color="var(--green)" />
+      <div className="grid-2 mb-24" style={{ gap: '20px' }}>
+        <StatCard value={`₹${totalSpent}`} label="TOTAL AMOUNT SPENT" bg="#ecfdf5" color="var(--green)" />
+        <Card style={{ background: 'var(--bg2)' }}>
+          <div className="flex flex-between align-center mb-8">
+            <span className="card-title" style={{ margin: 0 }}>🎯 MONTHLY BUDGET CAP</span>
+            <div className="flex align-center gap-8">
+              <span style={{ fontSize: '0.75rem', fontWeight: 800 }}>CAP: ₹</span>
+              <input
+                type="number"
+                className="form-input"
+                style={{ width: '100px', padding: '4px 8px' }}
+                value={budgetCap}
+                onChange={e => setBudgetCap(Number(e.target.value))}
+              />
+            </div>
+          </div>
+          <div style={{ height: '14px', background: 'var(--bg)', border: '1.5px solid var(--border)', borderRadius: '3px', overflow: 'hidden' }}>
+            <div style={{ width: `${percentSpent}%`, height: '100%', background: percentSpent > 90 ? 'var(--red)' : percentSpent > 75 ? 'var(--orange)' : 'var(--green)', transition: 'width 0.3s ease' }} />
+          </div>
+          <div style={{ marginTop: '6px', fontSize: '0.78rem', fontWeight: 800, textAlign: 'right', color: percentSpent > 90 ? 'var(--red)' : 'var(--text2)' }}>
+            {percentSpent}% Spent of ₹{budgetCap} Limit {percentSpent > 90 && '⚠️ OVER BUDGET WARNING!'}
+          </div>
+        </Card>
       </div>
       
       <Card className="mb-24">
